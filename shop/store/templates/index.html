@@ -1,42 +1,44 @@
 {% extends 'layouts.html' %}
 
 {% load static %}
-
-
+{% load humanize %}
 {% block content %}
 
-{% include 'banner.html' %}
 
 
-<div class ="container">
+
+<div class ="container"  >
+
+  {% include 'banner.html' %}
 
     <div class="row my-5">
 
     {% for product in products %}
 
-    <div class="col-lg-4 col-md-6 mb-4">
-        <div class="card h-50">
-          <a href="#"><img class="card-img-top" src="{{product.image.url}}" alt=""></a>
-          <div class="card-body">
-            <h4 class="card-title">
-              <a href="#">{{product.name}}</a>
-            </h4>
-          </div>
-          <div class="card-footer">
-                {% if product.stock <= 0 %}
-                    <p class="text-danger">สินค้าหมด</p>
-                {% else %}
-                    <a href="#" class= "btn btn-primary">เพิ่มลงตะกร้า</a>
-                {% endif %}
-                <h5 align="right">{{product.price}} บาท</h5>
-          </div>
-        </div>
+    <div class="card col-lg-3 col-md-6 mx-3 my-3 " style="width: 16rem;">
+      <a href="{{product.get_url}}"  style="text-decoration: none;">
+      <img class="card-img-top " src="{{product.image.url}}" alt="Card image cap">
+      
+      <div class="card-body">
+        
+        <h5 class="card-title text-dark">
+          {{product.name}}
+        </h5>
+      </a>
+        <h3 class="mb-3">
+          <span class="text-danger mr-1">{{product.price | intcomma}} บาท</span>
+        </h3>
+  
       </div>
+    
+    
+    </div>
+
 
     {% endfor %}
 
     </div>
-
+    
 </div>
 
 

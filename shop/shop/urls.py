@@ -25,12 +25,18 @@ from django.conf import settings
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.index, name='home'),
-    path('product/',views.product),
+    path('category/<slug:category_slug>', views.index, name="product_by_category"),
+   # path('category/<slug:category_slug>/<slug:subcategory_slug>',views.index, name="product_by_subcategory"),
+    path('product/<slug:category_slug>/<slug:subcategory_slug>/<int:product_id>', views.productPage, name='productDetail'),
     path('brand/',views.brand),
+    path('cart/add/<int:product_id>', views.addCart, name='addCart'),
+    path('cart/remove/<int:product_id>', views.removeCart, name='removeCart'),
+    path('cartdetail/', views.cartdetail,name='cartDetail'),
     path('account/create', views.signUpView, name='signUp' ),
     path('account/login', views.signInView, name='signIn' ),
     path('account/logout', views.signOutView, name='signOut' ),
-    path('search/', views.search, name='search' )
+    path('search/', views.search, name='search' ),
+    path('orderHistory/', views.orderHistory, name='orderHistory' )
 ]
 
 if settings.DEBUG :

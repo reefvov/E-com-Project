@@ -45,7 +45,7 @@
                         <p class="cart_total_price">{{item.sub_total|intcomma}}</p>
                     </td>
                     <td class="cart_delete">
-                        <a class="cart_quantity_delete" href="{% url 'removeCart' item.product.id %}"><i class="fa fa-times"></i></a>
+                        <a class="cart_quantity_delete" onclick="return confirm('คุณต้องการลบสินค้าออกจากตระกร้าหรือไม่ ?')" href="{% url 'removeCart' item.product.id %}"><i class="fa fa-times"></i></a>
                     </td>
                 </tr>
                 {% endfor %}

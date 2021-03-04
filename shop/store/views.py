@@ -2,34 +2,86 @@ from django.db.models.deletion import SET_NULL
 from django.db.models.fields import BLANK_CHOICE_DASH, NullBooleanField
 from django.shortcuts import render, redirect, get_object_or_404
 from store.forms import SignUpForm
-from store.models import Category,Product,Banner,Cart,CartItem,Order,OrderItem
+from store.models import Category,Brand,Product,Banner,Cart,CartItem,Order,OrderItem
 from django.contrib.auth.models import Group,User
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login,logout , authenticate
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator,EmptyPage,InvalidPage
 
 # Create your views here.
 
-def index(request, category_slug=None):
+def index(request):
     products = None
-    category_page = None
+   
     banners =  None
     banners  = Banner.objects.all()
 
-    if category_slug != None :
-        category_page = get_object_or_404(Category, slug = category_slug  )
-        products = Product.objects.all().filter(category=categy_page, available=True)
+  
+    products = Product.objects.all().filter(available=True)
    
+    return render(request, 'index.html',{'products':products,'banners':banners,})
+   
+
+
+def product_by_category(request,category_slug=None,subcategory_slug=None):
+    products = None
+    category_page = None
+
+    if subcategory_slug == None :  # parent
+        category_page = get_object_or_404(Category, slug=category_slug )
+        products = Product.objects.all().filter(category__parent = category_page , available=True)
+
+     
     else:
-        products = Product.objects.all().filter(available=True)
+        category_page = get_object_or_404(Category, parent__slug=category_slug , slug = subcategory_slug )
+        products = Product.objects.all().filter(category=category_page, available=True)
    
-    return render(request, 'index.html',{'products':products,'banners':banners,'category':category_page})
+
+
+    paginator = Paginator(products,2)
+    try:
+        page=int(request.GET.get('page','1'))
+    except:
+        page=1
+
+    try: 
+        productperPage = paginator.page(page)
+    except (EmptyPage,InvalidPage):
+        productperPage = paginator.page(paginator.num_pages)
+        
+
+
+    return render(request, 'products.html',{'products':productperPage,'category':category_page})
    
+
+def product_by_brand(request,brand_slug=None):
+    products = None
+    brand_page = None
+
+    
+    brand_page = get_object_or_404(Brand, slug= brand_slug )
+    products = Product.objects.all().filter(brand = brand_page , available=True)
+
+    paginator = Paginator(products,2)
+    try:
+        page=int(request.GET.get('page','1'))
+    except:
+        page=1
+
+    try: 
+        productperPage = paginator.page(page)
+    except (EmptyPage,InvalidPage):
+        productperPage = paginator.page(paginator.num_pages)
+
+    return render(request, 'products.html',{'products':productperPage,'brand':brand_page})
+
 
 
 
 def productPage(request,category_slug,subcategory_slug,product_id):
     try:
+        
         product = Product.objects.get(category__parent__slug = category_slug ,category__slug= subcategory_slug , id=product_id )
     except Exception as e :
         raise e
@@ -48,31 +100,45 @@ def _cart_id(request):
 
 @login_required(login_url='signIn')
 def addCart(request,product_id):
-    #ดึงสินค้าที่จะซื้อ
-    product = Product.objects.get(id=product_id)
-    #สร้างตะกร้า
-    try:
-        cart=Cart.objects.get(cart_id=_cart_id(request))
-    except Cart.DoesNotExist :
-        cart=Cart.objects.create(cart_id=_cart_id(request))
-        cart.save()
+    
+    if request.method == 'POST':
 
-    try:
-        #ซื้อรายการสินค้าซ้ำ
-        cart_item=CartItem.objects.get(product=product, cart=cart)
-        if cart_item.quantity < cart_item.product.stock:
-            #เปลี่ยนจำนวนรายการสินค้า
-            cart_item.quantity+=1
-            cart_item.save()
-    except CartItem.DoesNotExist :
-        #ซื้อรายการสินค้าครั้งแรก
-        #บันทึกลงDB
-        cart_item=CartItem.objects.create(
-            product = product,
-            cart = cart,
-            quantity = 1
-            )
-        cart_item.save()
+             
+        quantity  = request.POST['number']
+
+        #ดึงสินค้าที่จะซื้อ
+        product = Product.objects.get(id=product_id)
+
+        if int(quantity) < product.stock : #สินค้ามีstock พอให้ซื้อ
+      
+            #สร้างตะกร้า
+            try:
+                cart=Cart.objects.get(cart_id=_cart_id(request))
+            except Cart.DoesNotExist :
+                cart=Cart.objects.create(cart_id=_cart_id(request))
+                cart.save()
+
+            try:
+                #ซื้อรายการสินค้าซ้ำ
+                cart_item=CartItem.objects.get(product=product, cart=cart)
+                if cart_item.quantity < cart_item.product.stock:
+                    #เปลี่ยนจำนวนรายการสินค้า
+                    cart_item.quantity+= int(quantity)
+                    cart_item.save()
+            except CartItem.DoesNotExist :
+                #ซื้อรายการสินค้าครั้งแรก
+                #บันทึกลงDB
+                cart_item=CartItem.objects.create(
+                    product = product,
+                    cart = cart,
+                    quantity = quantity
+                    )
+                cart_item.save()
+        
+        else:
+            return redirect('home')
+            
+
 
     return redirect('/')
 
@@ -159,7 +225,7 @@ def signOutView(request):
 
 def search(request):
     products = Product.objects.filter(name__contains = request.GET['title'])
-    return render(request,'index.html', {'products':products})
+    return render(request,'products.html', {'products':products})
 
 
 def orderHistory(request):

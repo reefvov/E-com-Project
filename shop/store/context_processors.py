@@ -1,10 +1,19 @@
 from django.urls.conf import path
-from store.models import Category,Cart,CartItem
+from store.models import Category,Cart,CartItem,Brand
 from store.views import _cart_id
+
+
 
 def menu_links(request):
     links = Category.objects.all().filter(parent=None)
-    return dict(links=links)
+    links_sub = Category.objects.all().filter(parent__isnull=False)
+    brands_links = Brand.objects.all().filter()
+
+    return dict(links=links, links_sub=links_sub, brands_links=brands_links)
+
+
+
+
 
 def counter(request):
     item_count = 0

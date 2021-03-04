@@ -23,8 +23,10 @@ class Category(models.Model):
         return ' -> '.join(full_path[::-1])
     
     def get_url(self):
-        return reverse('product_by_category', args=[self.slug])
-
+        if self.parent == None:
+            return reverse('product_by_category', args=[self.slug])
+        else:
+            return reverse('product_by_subcategory', args=[self.parent.slug, self.slug])
         
 
 
@@ -40,7 +42,8 @@ class Brand(models.Model):
         verbose_name = 'แบรนด์สินค้า'
         verbose_name_plural = "ข้อมูลแบรนด์สินค้า"
      
-
+    def get_url(self):
+        return reverse('product_by_brand', args=[self.slug])
 
         
 class Product(models.Model):

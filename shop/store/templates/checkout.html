@@ -1,0 +1,118 @@
+{% extends 'layouts.html' %}
+{% load humanize %}
+{% block content %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+
+
+<div class="container">
+
+  <div class="table-responsive col-md-6 ">
+    <h2>สรุปรายการสั่งซื้อ</h2>
+    <table class="table table-condensed">
+        <thead>
+            <tr class="cart_menu">
+                <td class="image">รายการสินค้า</td>
+                <td class="description"></td>
+                <td class="quantity">จำนวน</td>
+                <td class="total">รวม</td>
+                <td></td>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in cart_items %}
+            <tr>
+                <td class="cart_product">
+                    <a href="{{item.product.get_url}}"><img src="{{item.product.image.url}}" alt="" width="80px" height="80px"></a>
+                </td>
+                <td class="cart_description">
+                    <h5><a href="{{item.product.get_url}}">{{item.product.name}}</a></h5>
+                </td>
+           
+                <td class="cart_quantity">
+                        <p>{{item.quantity}}</p>
+                    </div>
+                </td>
+                <td class="cart_total">
+                    <p class="cart_total_price">{{item.sub_total|intcomma}}</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+</div>
+
+
+
+
+
+  
+
+<form class="row g-3 my-2" action="{%url 'checkOut' %}" enctype="multipart/form-data"  method="POST">
+  {% csrf_token %}
+
+  <h2>ที่อยู่จัดส่ง</h2>
+
+    <div class="col-md-6">
+      <label for="inputName" class="form-label">ชื่อ-สกุล</label>
+      {{form.name}}
+    </div>
+
+    <div class="col-md-6">
+      <label for="inputTel" class="form-label">เบอร์มือถือ</label>
+    
+      {{form.phone}}
+    </div>
+   
+    <div class="col-12">
+      <label for="inputAddress" class="form-label">ที่อยู่</label>
+    
+      {{form.address}}
+    </div>
+
+    <div class="col-md-4">
+      <label for="inputState" class="form-label">จังหวัด</label>
+    
+      {{form.city}}
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <label for="inputState" class="form-label">เขต/อำเภอ</label>ฃ
+  
+      {{form.district}}
+    </div>
+
+    <div class="col-md-3">
+      <label for="inputState" class="form-label">แขวง/ตำบล</label>
+
+      {{form.subdistrict}}
+    </div>
+
+    <div class="col-md-2">
+      <label for="inputZip" class="form-label">รหัสไปรษณีย์</label>
+    
+      {{form.postcode}}
+    </div>
+
+
+
+
+    
+
+
+    <div class="col-12">
+      <button type="submit" class="btn btn-primary">ยืนยันการสั่งซื้อ</button>
+    </div>
+  </div>
+
+  </form>
+
+
+
+</div>
+
+
+{% endblock %}

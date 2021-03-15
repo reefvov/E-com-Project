@@ -1,0 +1,30 @@
+{% extends 'layouts.html' %}
+{% load humanize %}
+{% block content %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+
+
+
+      <h2>ช่องทางการชำระเงิน</h2>
+      
+      <h2> โอนเงินผ่านบัญชีธนาคาร/อินเตอร์เน็ตแบงก์กิ้ง/โมบายแบงก์กิ้ง</h2>
+
+       
+      <h2>เลขออร์เดอร์ #{{order_id}}</h2>
+      <h2></h2>ยอดที่ต้องชำระ {{total}} บาท</h2>
+      <form class="row g-3 my-2" action="" enctype="multipart/form-data"  method="POST">
+        {% csrf_token %}
+
+        <div class="input-group mb-3 my-5 col-md-4">
+            {{form.slip}}
+        </div>
+
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary">อัพโหลด</button>
+          </div>
+        </div>
+    </form>
+
+{% endblock %}

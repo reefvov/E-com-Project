@@ -1,0 +1,68 @@
+{% extends 'layouts.html' %}
+{% load humanize %}
+{% block content %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+
+<div class ="container">
+
+        {% if not orders %} 
+        <div class="alert alert-danger my-2 " role="alert">
+            <p align="center">
+                <b> ไม่พบประวัติการสั่งซื้อสินค้า</b>
+            </p>
+        </div>
+            
+    
+        {% else %}
+        <h2 align="center">ประวัติการสั่งซื้อ</h2>
+
+        <div class="table-responsive">
+            <table class="table table-condensed">
+                <thead>
+                    <tr class="order_menu">
+                        </td class="id">รหัสใบสั่งซื้อ</td>
+                        </td class="date">วันที่สั่งซื้อ</td>
+                        </td class="total">ยอดชำระเงิน</td>
+                        </td class="status">สถานะ</td> 
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td class="id">
+                            <p>{{order.id}} </p>
+                        </td>
+                        <td class="date">
+                            <p>{{order.created | date:"d M Y"}} </p>
+                        </td>
+                        <td class="total">
+                            <p>{{order.total | intcomma}}</p>
+                        </td>
+                        <td class="status">
+                             <p>{{order.status}}</p>
+                        </td> 
+                        <td >
+                            {% if order.status == 'waiting' %}
+                                <a class="btn btn-danger" href="{{order.get_url}}">ชำระเงิน</a>
+                            {% else %}
+
+                            {% endif %}
+                            {% if order.status == 'complete' %}
+                                <a class="btn btn-primary" href="{%url 'orderDetail' order.id%}">รายละเอียด</a>
+                            {% endif %}
+
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+        </div>
+        {% endif %}
+
+</div>
+
+
+{% endblock %}

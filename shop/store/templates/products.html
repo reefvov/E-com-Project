@@ -1,0 +1,85 @@
+{% extends 'layouts.html' %}
+
+{% load static %}
+{% load humanize %}
+{% block content %}
+
+
+
+<div class ="container"  >
+
+      <div class="row my-5">
+  
+      {% for product in products %}
+  
+      <div class="card col-lg-3 col-md-6 mx-3 my-3 " style="width: 16rem;">
+        <a href="{{product.get_url}}"  style="text-decoration: none;">
+        <img class="card-img-top " src="{{product.image.url}}" alt="Card image cap">
+        
+        <div class="card-body">
+          
+          <h5 class="card-title text-dark">
+            {{product.name}}
+          </h5>
+        </a>
+          <h3 class="mb-3">
+            <span class="text-danger mr-1">{{product.price | intcomma}} บาท</span>
+          </h3>
+    
+        </div>
+      
+      
+      </div>
+  
+  
+      {% endfor %}
+  
+      </div>
+
+
+
+      <nav aria-label="pagination">
+        {% if products.paginator.num_pages > 1%}
+        <ul class="pagination">
+
+
+          {% if products.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ products.previous_page_number }}" aria-label="Previous">
+              <span aria-hidden="true">&laquo;</span>
+              <span class="sr-only">Previous</span>
+            </a>
+          </li>
+          {% endif %}
+
+
+          {% for page_number in products.paginator.page_range%}
+          <li class="page-item 
+          {% if products.number == page_number %}
+            active
+          {% endif %}
+          "><a class="page-link" href="?page={{page_number}}">{{page_number}}</a></li>
+          {% endfor %}
+          
+
+          {% if products.has_next %}
+          <li class="page-item ">
+            <a class="page-link" href="?page={{ products.next_page_number }}" aria-label="Next">
+              <span aria-hidden="true">&raquo;</span>
+              <span class="sr-only">Next</span>
+            </a>
+          </li>
+          {% endif %}
+
+
+        </ul>
+        {% endif %}
+      </nav>
+      
+  </div>
+
+
+
+
+
+{% endblock %}

@@ -9,29 +9,32 @@
 
       
 
-      
 
+      
+        <!--drop down หมวดหมู่สินค้า -->
       <li class="nav-item dropdown "><a class="nav-link text-light text-uppercase font-weight-bold px-3 dropdown-toggle"
         href="" data-toggle="dropdown">หมวดหมู่สินค้า</a>
 
-        <div class="dropdown-menu ">       
-          {% for category in links %}
-            <a class="dropdown-item " href="{{category.get_url}}">{{category.name}}</a>
-            {% for subcategory in links_sub %}
-              {% if subcategory.parent.slug == category.slug %}
-                <a class="dropdown-item" href="{{subcategory.get_url}}">{{subcategory.name}}</a>
+
+        <div class="dropdown-menu ">    
+          {% load mptt_tags %}  
+
+          {% recursetree category_links %}
+            <a class="dropdown-item " href="{{node.get_url}}">{{ node.name }}</a>
+            {% if not node.is_leaf_node %}
+                <a class="dropdown-item" href="{{node.get_url}}">{{ children }}</a>
               {% endif %}
-            {% endfor %}
-          {% endfor %}
-
-      
+            
+          {% endrecursetree %}
         </div>
-        
       </li>
-      
+
 
       
 
+
+      
+      <!--drop down แบรนด์ -->
       <li class="nav-item dropdown "><a class="nav-link text-light text-uppercase font-weight-bold px-3 dropdown-toggle"
         href="" data-toggle="dropdown">แบรนด์สินค้า</a>
 
@@ -40,13 +43,10 @@
           {% for brand in brands_links %}
           
             <a class="dropdown-item" href="{{brand.get_url}}">{{brand.name}}</a>
-            
-
+          
           {% endfor %}
 
-      
         </div>
-        
       </li>
 
 

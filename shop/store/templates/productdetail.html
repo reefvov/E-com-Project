@@ -7,8 +7,8 @@
 <div class="container">
     <div class="row">
       
-        <div class="col-lg-2"></div>
-    <div class="col-lg-8">
+        <div class="col-lg-3"></div>
+    <div class="col-lg-5">
         <div class="card mt-4">
           
             <img class="card-img-top img-fluid" src="{{product.image.url}}" alt="">
@@ -18,6 +18,17 @@
               <p class="card-text">{{product.description}}</p>
 
 
+
+              {% if messages %}
+              <ul class="messages text-danger  ">
+                  {% for message in messages %}
+                  <li  {% if message.tags %} class=" {{ message.tags }} " {% endif %}> {{ message }} </li>
+                  {% endfor %}
+              </ul>
+              {% endif %}
+
+
+
               {% if product.stock <= 0 %}
                 <h5 class="text-danger">สินค้าหมด</h5>
               {% else %}
@@ -25,7 +36,7 @@
 
               <form action="{%url 'addCart' product.id%}" method ="POST">
                 {% csrf_token %}
-                <input id="number" name="number"  class="form-control-lg"  placeholder="Enter a number" required type="number"  value="1" min="1" max="{{product.stock}}"/>
+                <input id="number" name="number"  class="form-control-lg col-3"  placeholder=" " required type="number"  value="1" min="1" max=""/>
               
             
                 <a>{{product.unit}}</a>
@@ -34,6 +45,8 @@
                 <input type="submit" value="เพิ่มลงตะกร้า"  class="btn btn-primary">
                 
               </form>
+
+
 
               {% endif %}
               

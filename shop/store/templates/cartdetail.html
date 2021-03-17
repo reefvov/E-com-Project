@@ -4,7 +4,11 @@
 {% load static %}
 {% load crispy_forms_tags %}
 
+
+
 <div class="container">
+
+     <!--กรณีไม่มีสินค้าในตะกร้า-->
     {% if not cart_items %} 
     <div class="alert alert-danger my-2 " role="alert">
         <p align="center">
@@ -13,6 +17,8 @@
     </div>
         
 
+
+    <!--กรณีมีสินค้าในตะกร้า แสดงtable สินค้าในตะกร้าทั้งหมด พร้อมบอกราคารวม-->
     {% else %}
     <div class="table-responsive ">
         <table class="table table-condensed">
@@ -53,45 +59,19 @@
         
     </div>
 
-    {% if add_coupon == False%}
+    
     <h4 class="text-right">ราคาสินค้ารวม {{total|intcomma}} บาท</h4>
-    <h4 class="text-right">ราคาสินค้ารวมทั้งสิ้น {{new_total|intcomma}} บาท</h4>
-    {% else %}
-    <h4 class="text-right">ราคาสินค้ารวม  {{total|intcomma}} บาท</h4>
-    <h6 class="text-right">ส่วนลด{{coupon.code}} ({{coupon.discount}}%)</h6> 
-    <h6 class="text-right"><a href="{% url 'removeCoupon' %}">ลบ</a></h6>
-    <h4 class="text-right">ส่วนลด -{{discount_price|intcomma}} บาท</h4>
-    <h4 class="text-right">ราคาสินค้ารวมทั้งสิ้น {{new_total|intcomma}} บาท</h4>
-    {% endif %}
+    
+  
 
 
 
-   
-    {% if messages %}
-    <ul class="messages text-danger  ">
-        {% for message in messages %}
-        <li  {% if message.tags %} class=" {{ message.tags }} " {% endif %}> {{ message }} </li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-   
-
-    <form action="{%url 'cartDetail' %}", method="POST">
-        <div class="input-group">
-            {% csrf_token %}
-            {{form}}
-          <div class="input-group-append ">
-            <button class="btn btn-success" type="submit" >ใช้</button>
-          </div>
-        </div>
-      </form>
 
 
-      
-
-      <form action="{%url 'checkOut' %}" method="GET">
-        
-        <button class="btn btn-primary " type="submit" >ยืนยันการสั่งซื้อ</button> 
+        <!--ปุ่มยืนยันการสั่งซื้อ-->
+      <form action="{%url 'checkOut' %}" method="POST">
+        {% csrf_token %}
+        <button class="btn btn-primary " type="submit" name="confirm" >ยืนยันการสั่งซื้อ</button> 
       </form>
 
     {% endif %}

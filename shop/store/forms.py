@@ -34,10 +34,15 @@ BANK_CHOICES = [
 
 
 class CheckOutForm(forms.Form):
-    name = forms.CharField(widget = forms.TextInput(attrs={                   #ชื่อ
+    first_name = forms.CharField(widget = forms.TextInput(attrs={                   #ชื่อ
         'class' : 'form-control',
-        'id' : 'name'
+        'id' : 'firstname'
     }))   
+
+    last_name = forms.CharField(widget = forms.TextInput(attrs={                   #นามสกุล
+        'class' : 'form-control',
+        'id' : 'lastname'
+    }))  
     
     phone = forms.CharField(widget = forms.TextInput(attrs={                  #เบอร์โทร
         'class' : 'form-control',

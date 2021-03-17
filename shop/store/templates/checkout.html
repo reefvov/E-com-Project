@@ -46,21 +46,22 @@
 
 
 
-
-
-  
-
 <form class="row g-3 my-2" action="{%url 'checkOut' %}" enctype="multipart/form-data"  method="POST">
   {% csrf_token %}
 
   <h2>ที่อยู่จัดส่ง</h2>
 
-    <div class="col-md-6">
-      <label for="inputName" class="form-label">ชื่อ-สกุล</label>
-      {{form.name}}
+    <div class="col-md-4">
+      <label for="inputName" class="form-label">ชื่อ</label>
+      {{form.first_name}}
     </div>
 
-    <div class="col-md-6">
+    <div class="col-md-4">
+      <label for="inputName" class="form-label">นามสกุล</label>
+      {{form.last_name}}
+    </div>
+
+    <div class="col-md-4">
       <label for="inputTel" class="form-label">เบอร์มือถือ</label>
     
       {{form.phone}}

@@ -2,32 +2,38 @@ from django.db import models
 from django.db.models.deletion import CASCADE
 from django.urls import reverse
 from django.core.validators import MinValueValidator, MaxValueValidator
+from mptt.models import MPTTModel
+from mptt.fields import TreeForeignKey
 
 # Create your models here.
-class Category(models.Model):
-    parent = models.ForeignKey('self',blank=True, null=True,related_name='children',on_delete=CASCADE)
+class Category(MPTTModel):
+    parent = TreeForeignKey('self',blank=True, null=True,related_name='children',on_delete=CASCADE)
     name = models.CharField(max_length=255)
     slug = models.SlugField() #ใช้ตั้งชื่อเล่นให้ข้อมูลในmodel
     
-    class Meta:
-        unique_together = ('slug','parent',)
-        verbose_name = 'หมวดหมู่'
-        verbose_name_plural = "ข้อมูลประเภทสินค้า"
+    #class Meta:
+       # unique_together = ('slug','parent',)
+      #  verbose_name = 'หมวดหมู่'
+       # verbose_name_plural = "ข้อมูลประเภทสินค้า"
+
+    class MPTTMeta:
+        order_insertion_by = ['name']
 
     def __str__(self):
-        full_path = [self.name]
-        k = self.parent
-        while k is not None:
-            full_path.append(k.name)
-            k = k.parent
+        return self.name
+         
+       # full_path = [self.name]
+       # k = self.parent
+      #  while k is not None:
+        #    full_path.append(k.name)
+      #      k = k.parent
 
-        return ' -> '.join(full_path[::-1])
+       # return ' -> '.join(full_path[::-1])
     
     def get_url(self):
-        if self.parent == None:
-            return reverse('product_by_category', args=[self.slug])
-        else:
-            return reverse('product_by_subcategory', args=[self.parent.slug, self.slug])
+        
+        return reverse('product_by_category', args=[self.slug])
+        
         
 
 
@@ -81,7 +87,7 @@ class Product(models.Model):
         verbose_name_plural = "ข้อมูลสินค้า"
 
     def get_url(self):
-        return reverse('productDetail', args=[self.category.parent.slug,self.category.slug, self.id])
+        return reverse('productDetail', args=[self.id])
 
 
 
@@ -133,12 +139,15 @@ class CartItem(models.Model):
 class Order(models.Model):
 
     STATUS = (
-                ('waiting', 'รอชำระเงิน'  ),
-                ('checking','ชำระแล้ว-รอตรวจสอบ'),
-                ('complete','สำเร็จ'),
+                ('รอชำระเงิน', 'รอชำระเงิน'  ),
+                ('ชำระเงินแล้ว-รอตรวจสอบ','ชำระเงินแล้ว-รอตรวจสอบ'),
+                ('กำลังจัดส่ง','กำลังจัดส่ง'),
+                ('จัดส่งสินค้าแล้ว','จัดส่งสินค้าแล้ว'),
+                ('ไม่ผ่านการตรวจสอบ','ไม่ผ่านการตรวจสอบ')
             )
-    order_no = models.CharField(max_length=255, blank=True)
-    name = models.CharField(max_length=255, blank=True)
+
+    first_name = models.CharField(max_length=255, blank=True)
+    last_name = models.CharField(max_length=255, blank=True)
     phone = models.CharField(max_length=10, blank=True)
     user_id = models.CharField(max_length=255, blank=True)
     address = models.CharField(max_length=255, blank=True)      #ที่อยู่
@@ -148,7 +157,7 @@ class Order(models.Model):
     postcode = models.CharField(max_length=255, blank=True)     #รหัสไปรษณีย์
     total = models.DecimalField(max_digits=10, decimal_places=2)
     slip =  models.ImageField(upload_to="transfer_slip",blank=True)
-    status =  models.CharField(max_length=10, blank=True, choices = STATUS)
+    status =  models.CharField(max_length=255, blank=True, choices = STATUS)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     
@@ -192,3 +201,5 @@ class Coupon(models.Model):
 
     def __str__(self) :
             return self.code
+
+

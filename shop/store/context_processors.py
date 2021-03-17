@@ -5,11 +5,10 @@ from store.views import _cart_id
 
 
 def menu_links(request):
-    links = Category.objects.all().filter(parent=None)
-    links_sub = Category.objects.all().filter(parent__isnull=False)
+    category_links = Category.objects.all().filter()
     brands_links = Brand.objects.all().filter()
 
-    return dict(links=links, links_sub=links_sub, brands_links=brands_links)
+    return dict(category_links=category_links, brands_links=brands_links)
 
 
 

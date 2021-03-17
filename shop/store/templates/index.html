@@ -1,26 +1,74 @@
 {% extends 'layouts.html' %}
-
 {% load static %}
 {% load humanize %}
 {% block content %}
-
+{% load mptt_tags %}
 
 
 <div class ="container"  >
-
+  
+  <!--แสดงป้ายโฆษณา-->
   {% include 'banner.html' %}
+
+
+
+
 
     <div class="row my-5">
 
-    {% for category in links %}
 
-      <h2 class="bg-info"0>{{category.name}}</h2>
+
+      <!--แสดงแบรนด์-->
+      <h2 class="bg-info">แบรนด์ยอดนิยม</h2>
+      {% for brand in brands %}
+      <div class="card col-lg-3 col-md-6 mx-3 my-3 " style="width: 16rem;">
+        <a href="{{brand.get_url}}"  style="text-decoration: none;">
+        <img class="card-img-top " src="{{brand.image.url}}" alt="Card image cap">
+      </div>  
+       </a>
+      {% endfor %}
+
+
+     
+
+
+
+       <!--แสดงสินค้ามาใหม่-->
+      <h2 class="bg-info"> สินค้ามาใหม่ </h2>
+      {% for product in products_lastest %}
+      <div class="card col-lg-3 col-md-6 mx-6 my-3  " style="width: 16rem;">
+        <a href="{{product.get_url}}"  style="text-decoration: none;">
+        <img class="card-img-top " src="{{product.image.url}}" alt="Card image cap">
+        
+        <div class="card-body">
+          
+          <h5 class="card-title text-dark">
+            {{product.name}}
+          </h5>
+        </a>
+          <h3 class="mb-3">
+            <span class="text-danger mr-1">{{product.price | intcomma}} บาท</span>
+          </h3>
+        </div>
+      </div>
+      {% endfor %}
+
+      
+
+
+
+
+
+       <!--แสดงสินค้าแต่ละหมวดหมู่-->
+      {% recursetree catagory %}
+
+      <h2 class="bg-info">{{ node.name }}</h2>
 
       {% for product in products %}
 
-      {% if product.category.parent == category %}
+      {% if product.category.get_root == node %}
   
-    <div class="card col-lg-3 col-md-6 mx-3 my-3 " style="width: 16rem;">
+    <div class="card col-lg-3 col-md-6 mx-6 my-3 " style="width: 16rem;">
       <a href="{{product.get_url}}"  style="text-decoration: none;">
       <img class="card-img-top " src="{{product.image.url}}" alt="Card image cap">
       
@@ -33,21 +81,16 @@
         <h3 class="mb-3">
           <span class="text-danger mr-1">{{product.price | intcomma}} บาท</span>
         </h3>
-  
       </div>
-    
-    
     </div>
-   
-
       {% endif %}
-      
-    
       {% endfor %}
-      
-    {% endfor %}
-    
+    {% endrecursetree %}
     </div>
+
+
+
+
     
 </div>
 

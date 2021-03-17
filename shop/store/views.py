@@ -23,27 +23,42 @@ def index(request):
 
   
     products = Product.objects.all().filter(available=True)
+    products_lastest = Product.objects.all().order_by('-id')[:5]
+    category = Category.objects.all()
+    brands = Brand.objects.all()
    
-    return render(request, 'index.html',{'products':products,'banners':banners,})
+    return render(request, 'index.html',{'products':products,'banners':banners,'catagory':category,
+                                        'products_lastest': products_lastest, 'brands':brands })
    
 
 
-def product_by_category(request,category_slug=None,subcategory_slug=None):
+def product_by_category(request,category_slug=None):
     products = None
     category_page = None
 
-    if subcategory_slug == None :  # parent
-        category_page = get_object_or_404(Category, slug=category_slug )
-        products = Product.objects.all().filter(category__parent = category_page , available=True)
+    category_page = get_object_or_404(Category, slug=category_slug )
+
+    if category_page.is_leaf_node() == True :  # parent
+        products = Product.objects.all().filter(category = category_page , available=True)
 
      
     else:
-        category_page = get_object_or_404(Category, parent__slug=category_slug , slug = subcategory_slug )
-        products = Product.objects.all().filter(category=category_page, available=True)
-   
+        products =  Product.objects.none()
+        category_set = category_page.get_descendants(include_self=False)
+        for cat in category_set :
+         
+            if cat.is_leaf_node() == True:
+               
+                products_ = Product.objects.all().filter(category=cat, available=True)
+                products = products.union(products_)
+                print(products)
+                
+            else: 
+             
+                continue
 
 
-    paginator = Paginator(products,1)
+    paginator = Paginator(products.order_by('id'),5)
     try:
         page=int(request.GET.get('page','1'))
     except:
@@ -67,7 +82,7 @@ def product_by_brand(request,brand_slug=None):
     brand_page = get_object_or_404(Brand, slug= brand_slug )
     products = Product.objects.all().filter(brand = brand_page , available=True)
 
-    paginator = Paginator(products,1)
+    paginator = Paginator(products.order_by('id'),5)
     try:
         page=int(request.GET.get('page','1'))
     except:
@@ -83,10 +98,10 @@ def product_by_brand(request,brand_slug=None):
 
 
 
-def productPage(request,category_slug,subcategory_slug,product_id):
+def productPage(request,product_id):
     try:
         
-        product = Product.objects.get(category__parent__slug = category_slug ,category__slug= subcategory_slug , id=product_id )
+        product = Product.objects.get( id=product_id )
     except Exception as e :
         raise e
 
@@ -112,7 +127,7 @@ def addCart(request,product_id):
         #ดึงสินค้าที่จะซื้อ
         product = Product.objects.get(id=product_id)
 
-        if int(quantity) < product.stock : #สินค้ามีstock พอให้ซื้อ
+        if int(quantity) <= product.stock : #สินค้ามีstock พอให้ซื้อ
       
             #สร้างตะกร้า
             try:
@@ -124,10 +139,16 @@ def addCart(request,product_id):
             try:
                 #ซื้อรายการสินค้าซ้ำ
                 cart_item=CartItem.objects.get(product=product, cart=cart)
-                if cart_item.quantity < cart_item.product.stock:
+                if int(quantity) <= cart_item.product.stock - cart_item.quantity:
+                    print(cart_item.quantity ,'<',cart_item.product.stock,'-',cart_item.quantity)
+                    print('hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh')
                     #เปลี่ยนจำนวนรายการสินค้า
                     cart_item.quantity+= int(quantity)
                     cart_item.save()
+                else:
+                    print('ssssssssssssssssssssssssssssssssssssss')
+                    messages.error(request,'จำนวนสินค้ามีไม่พอ')
+                    return  redirect(request.META.get('HTTP_REFERER', 'redirect_if_referer_not_found'))
             except CartItem.DoesNotExist :
                 #ซื้อรายการสินค้าครั้งแรก
                 #บันทึกลงDB
@@ -137,9 +158,11 @@ def addCart(request,product_id):
                     quantity = quantity
                     )
                 cart_item.save()
+                print('quantity = ',quantity)
         
         else:
-            return redirect('home')
+            messages.error(request,'จำนวนสินค้ามีไม่พอ')
+            return  redirect(request.META.get('HTTP_REFERER', 'redirect_if_referer_not_found'))
             
 
 
@@ -155,6 +178,9 @@ def cartdetail(request):
     discount_price = None
     new_total= None
     coupon = None
+    
+    
+
     try:
         cart =Cart.objects.get(cart_id=_cart_id(request)) #ดึงตะกร้า
         cart_items =CartItem.objects.filter(cart=cart, active=True) #ดึงข้อมูลสินค้าในตะกร้า
@@ -165,50 +191,16 @@ def cartdetail(request):
         pass
 
 
-    # if addCoupon
-    if request.method == 'POST':
-        now = timezone.now()
-        form = CouponApplyForm(request.POST)
-        if form.is_valid():
-            code = form.cleaned_data.get('code')
-            
-            try:
-                coupon = Coupon.objects.get(code__iexact = code,
-                                            valid_from__lte = now,
-                                            valid_to__gte = now,
-                                            active = True)
-
-                if total >= coupon.minimum:
-                    add_coupon = True
-                    discount_price = (total*coupon.discount)/100
-                    new_total = total - discount_price
-                else:
-                    messages.error(request,'ราคาของสินค้าไม่ถึงราคาขั้นต่ำที่กำหนดไว้')
-                    form = CouponApplyForm()
-                    redirect(request.META.get('HTTP_REFERER', 'redirect_if_referer_not_found'))
-
-            except Coupon.DoesNotExist:
-                messages.error(request,'ไม่พบคูปอง หรือ หมดอายุ')
-                form = CouponApplyForm()
-                
-                
-    else:
-        form = CouponApplyForm()
-        new_total = total
-
     return render(request, 'cartdetail.html', dict(cart_items=cart_items, total=total, 
-                                                    counter=counter, form=form, new_total=new_total, add_coupon=add_coupon,
+                                                    counter=counter, new_total=new_total, add_coupon=add_coupon,
                                                     discount_price=discount_price, coupon=coupon))
+
+
+
 
 def removeCoupon(request):
     add_coupon = False
-    return redirect('cartDetail')
-
-
-
-
-
-
+    return redirect('checkOut')
 
 
 def removeCart(request, product_id):
@@ -271,12 +263,6 @@ def signOutView(request):
     logout(request)
     return redirect('signIn')
 
-
-
-def search(request):
-    products = Product.objects.filter(name__icontains = request.GET.get('title') , available=True)
-   
-    return render(request, 'products.html',{'products':products })
     
 
 
@@ -285,10 +271,12 @@ def checkOutView(request):
     total = 0
     counter =0
     cart_items = None
-    add_coupon = False
     discount_price = None
     new_total= None
-    coupon = None
+    add_coupon = False
+    
+    couponform = CouponApplyForm()
+    form = CheckOutForm()
     try:
         cart =Cart.objects.get(cart_id=_cart_id(request)) #ดึงตะกร้า
         cart_items =CartItem.objects.filter(cart=cart, active=True) #ดึงข้อมูลสินค้าในตะกร้า
@@ -299,49 +287,50 @@ def checkOutView(request):
         pass
 
     if request.method == 'POST' :
-        print('i am hereeeeeeeeeeee')
-        form = CheckOutForm(request.POST)
-        if form.is_valid():
-            now = timezone.now()
-            data = Order()
+        
+            form = CheckOutForm(request.POST)
+            if form.is_valid():
+                now = timezone.now()
+                data = Order()
 
-            data.name = form.cleaned_data['name']
-            data.phone = form.cleaned_data['phone']
-            data.user_id = request.user.username
-            data.address = form.cleaned_data.get('address')
-            data.city = form.cleaned_data.get('city')
-            data.district = form.cleaned_data.get('district')
-            data.subdistrict = form.cleaned_data.get('subdistrict')
-            data.postcode = form.cleaned_data.get('postcode')
-            data.total = total
-            data.status =  'waiting'
-            data.save()
-            
-            thisorder = Order.objects.get(id=data.id)
-            order_id = thisorder.id
-            thisorder.order_no = '#'+ str(thisorder.id)
-            thisorder.save()
+                data.first_name = form.cleaned_data['first_name']
+                data.last_name = form.cleaned_data['last_name']
+                data.phone = form.cleaned_data['phone']
+                data.user_id = request.user.username
+                data.address = form.cleaned_data.get('address')
+                data.city = form.cleaned_data.get('city')
+                data.district = form.cleaned_data.get('district')
+                data.subdistrict = form.cleaned_data.get('subdistrict')
+                data.postcode = form.cleaned_data.get('postcode')
+                data.total = total
+                data.status =  'รอชำระเงิน'
+                data.save()
+                
+             
 
-            for item in cart_items:
-                order_item = OrderItem.objects.create(
-                    product = item.product.name,
-                    quantity = item.quantity,
-                    price = item.product.price,
-                    order = data
-                )
-                order_item.save()
-                #ลดจำนวนstock
-                product = Product.objects.get(id = item.product.id)
-                product.stock = int(item.product.stock - order_item.quantity)
-                product.save()
-                item.delete()
-            order = Order.objects.get(id=data.id)
-            return redirect(order.get_url())
+                for item in cart_items:
+                    order_item = OrderItem.objects.create(
+                        product = item.product.name,
+                        quantity = item.quantity,
+                        price = item.product.price,
+                        order = data
+                    )
+                    order_item.save()
+                    #ลดจำนวนstock
+                    product = Product.objects.get(id = item.product.id)
+                    product.stock = int(item.product.stock - order_item.quantity)
+                    product.save()
+                    item.delete()
+                order = Order.objects.get(id=data.id)
+                return redirect(order.get_url())
        
     else :   
         form = CheckOutForm()
-
-    return render(request, "checkout.html", dict(cart_items=cart_items, total=total, counter=counter, form=form))
+        couponform = CouponApplyForm()
+        new_total = total
+        
+    return render(request, "checkout.html", dict(cart_items=cart_items, total=total, counter=counter, form=form , couponform=couponform,
+                                                add_coupon =add_coupon ,discount_price = discount_price, new_total= new_total ))
 
 
 
@@ -352,7 +341,7 @@ def paymentView(request,order_id):
         if form.is_valid():
             order = Order.objects.get(id=order_id)
             order.slip = form.cleaned_data['slip']
-            order.status = 'checking'
+            order.status = 'ชำระเงินแล้ว-รอตรวจสอบ'
             order.save()
         return redirect('/')
     else :   
@@ -378,3 +367,15 @@ def viewOrder(request,order_id):
         order = Order.objects.get(user_id=username,id=order_id)
         orderitem = OrderItem.objects.filter(order=order)
     return render(request, 'viewOrder.html', {'order':order, 'order_item':orderitem})
+
+
+
+def search(request):
+    products = Product.objects.none()
+    products_name = Product.objects.filter(name__icontains = request.GET.get('title') , available=True)
+    products_category = Product.objects.filter(category__name__icontains = request.GET.get('title') , available=True)
+    products_brand = Product.objects.filter(brand__name__icontains = request.GET.get('title') , available=True)
+    products = products.union(products_name)
+    products = products.union(products_category)
+    products = products.union(products_brand)
+    return render(request, 'products.html',{'products':products })

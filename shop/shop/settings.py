@@ -47,7 +47,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'store',
     'crispy_forms',
-    'django.contrib.humanize'
+    'django.contrib.humanize',
+    'mptt',
 ]
 
 MIDDLEWARE = [

@@ -41,17 +41,23 @@
                             <p>{{order.total | intcomma}}</p>
                         </td>
                         <td class="status">
-                             <p>{{order.status}}</p>
+                            {% if order.status == 'จัดส่งสินค้าแล้ว' %}
+                             <p class="text-success">{{order.status}}</p>
+                            {% elif order.status == 'ไม่ผ่านการตรวจสอบ' %}
+                             <p class="text-danger">{{order.status}}</p>
+                             {% elif order.status == 'ชำระเงินแล้ว-รอตรวจสอบ' %}
+                             <p class="text-warning">{{order.status}}</p>
+                             {% elif order.status == 'กำลังจัดส่ง' %}
+                             <p class="text-info">{{order.status}}</p>
+                             {% else %}
+                             <p >{{order.status}}</p>
+                             <a class="btn btn-danger" href="{{order.get_url}}">ชำระเงิน</a>
+                             {% endif %}
+
                         </td> 
                         <td >
-                            {% if order.status == 'waiting' %}
-                                <a class="btn btn-danger" href="{{order.get_url}}">ชำระเงิน</a>
-                            {% else %}
-
-                            {% endif %}
-                            {% if order.status == 'complete' %}
+                                                       
                                 <a class="btn btn-primary" href="{%url 'orderDetail' order.id%}">รายละเอียด</a>
-                            {% endif %}
 
                         </td>
                     </tr>

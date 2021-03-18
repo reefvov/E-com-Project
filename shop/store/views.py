@@ -22,8 +22,8 @@ def index(request):
     banners  = Banner.objects.all()
 
   
-    products = Product.objects.all().filter(available=True)
-    products_lastest = Product.objects.all().order_by('-id')[:5]
+    products = Product.objects.all().filter(available=True)[:10]
+    products_lastest = Product.objects.all().order_by('-id')[:10]
     category = Category.objects.all()
     brands = Brand.objects.all()
    
@@ -37,6 +37,8 @@ def product_by_category(request,category_slug=None):
     category_page = None
 
     category_page = get_object_or_404(Category, slug=category_slug )
+
+    catagory_ancestor = category_page.get_ancestors(ascending=False, include_self=True)
 
     if category_page.is_leaf_node() == True :  # parent
         products = Product.objects.all().filter(category = category_page , available=True)
@@ -58,7 +60,7 @@ def product_by_category(request,category_slug=None):
                 continue
 
 
-    paginator = Paginator(products.order_by('id'),5)
+    paginator = Paginator(products.order_by('id'),3)
     try:
         page=int(request.GET.get('page','1'))
     except:
@@ -71,7 +73,7 @@ def product_by_category(request,category_slug=None):
         
 
 
-    return render(request, 'products.html',{'products':productperPage,'category':category_page})
+    return render(request, 'products.html',{'products':productperPage,'category':category_page, 'catagory_ancestor':catagory_ancestor })
    
 
 def product_by_brand(request,brand_slug=None):
@@ -82,7 +84,7 @@ def product_by_brand(request,brand_slug=None):
     brand_page = get_object_or_404(Brand, slug= brand_slug )
     products = Product.objects.all().filter(brand = brand_page , available=True)
 
-    paginator = Paginator(products.order_by('id'),5)
+    paginator = Paginator(products.order_by('id'),3)
     try:
         page=int(request.GET.get('page','1'))
     except:
@@ -140,8 +142,7 @@ def addCart(request,product_id):
                 #ซื้อรายการสินค้าซ้ำ
                 cart_item=CartItem.objects.get(product=product, cart=cart)
                 if int(quantity) <= cart_item.product.stock - cart_item.quantity:
-                    print(cart_item.quantity ,'<',cart_item.product.stock,'-',cart_item.quantity)
-                    print('hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh')
+
                     #เปลี่ยนจำนวนรายการสินค้า
                     cart_item.quantity+= int(quantity)
                     cart_item.save()
@@ -174,12 +175,12 @@ def cartdetail(request):
     total = 0
     counter =0
     cart_items = None
-    add_coupon = False
     discount_price = None
     new_total= None
     coupon = None
-    
-    
+    coupon_id = 0
+    add_coupon = False
+
 
     try:
         cart =Cart.objects.get(cart_id=_cart_id(request)) #ดึงตะกร้า
@@ -189,18 +190,59 @@ def cartdetail(request):
             counter+=(item.quantity)
     except Exception as e:
         pass
+    
 
+
+    if request.method == 'POST':
+
+        if 'redeem' in request.POST:
+
+            now = timezone.now()
+            form = CouponApplyForm(request.POST)
+            if form.is_valid():
+                code = form.cleaned_data.get('code')
+                
+                try:
+                    coupon = Coupon.objects.get(code__iexact = code,
+                                                valid_from__lte = now,
+                                                valid_to__gte = now,
+                                                active = True)
+
+                    if total >= coupon.minimum:
+                        add_coupon = True
+                        new_total = total - coupon.discount
+                        coupon_id = coupon.id
+                        
+                        
+                    else:
+                        add_coupon = False
+                        new_total= total
+                        messages.error(request,'ราคาของสินค้าไม่ถึงราคาขั้นต่ำที่กำหนดไว้')
+                        form = CouponApplyForm()
+                        #return redirect(request.META.get('HTTP_REFERER', 'redirect_if_referer_not_found'))
+
+                except Coupon.DoesNotExist:
+                    messages.error(request,'ไม่พบคูปอง หรือ หมดอายุ')
+                    new_total= total
+                    add_coupon = False
+                    
+
+    else:
+        form = CouponApplyForm()
+        new_total = total
+        
 
     return render(request, 'cartdetail.html', dict(cart_items=cart_items, total=total, 
                                                     counter=counter, new_total=new_total, add_coupon=add_coupon,
-                                                    discount_price=discount_price, coupon=coupon))
+                                                   coupon=coupon, form=form, coupon_id=coupon_id))
+
 
 
 
 
 def removeCoupon(request):
     add_coupon = False
-    return redirect('checkOut')
+    return redirect('cartDetail')
 
 
 def removeCart(request, product_id):
@@ -265,18 +307,16 @@ def signOutView(request):
 
     
 
-
-
-def checkOutView(request):
+def checkOutView(request,coupon_id):
     total = 0
-    counter =0
+    counter = 0
     cart_items = None
     discount_price = None
     new_total= None
     add_coupon = False
+    coupon = None
     
-    couponform = CouponApplyForm()
-    form = CheckOutForm()
+
     try:
         cart =Cart.objects.get(cart_id=_cart_id(request)) #ดึงตะกร้า
         cart_items =CartItem.objects.filter(cart=cart, active=True) #ดึงข้อมูลสินค้าในตะกร้า
@@ -286,8 +326,32 @@ def checkOutView(request):
     except Exception as e:
         pass
 
-    if request.method == 'POST' :
+    form = CheckOutForm(request.POST)
+
+    
+
+    if request.method == 'POST': 
         
+        if 'confirm' in request.POST:
+            print('Uppppppppppppppppppppppppppppppppp')
+            if coupon_id == 0:
+                new_total = total
+
+            else:
+                coupon = Coupon.objects.get(id=coupon_id)
+                new_total = total - coupon.discount
+                add_coupon = True
+
+
+        else:
+            print('Downnnnnnnnnnnnnnnnnnnnnnnnnnnnnn')
+            if coupon_id == 0:
+                new_total = total
+
+            else:
+                coupon = Coupon.objects.get(id=coupon_id)
+                new_total = total - coupon.discount
+                add_coupon = True
             form = CheckOutForm(request.POST)
             if form.is_valid():
                 now = timezone.now()
@@ -302,8 +366,10 @@ def checkOutView(request):
                 data.district = form.cleaned_data.get('district')
                 data.subdistrict = form.cleaned_data.get('subdistrict')
                 data.postcode = form.cleaned_data.get('postcode')
-                data.total = total
+                data.total = new_total
                 data.status =  'รอชำระเงิน'
+                if coupon_id != 0:
+                    data.code = coupon.code
                 data.save()
                 
              
@@ -323,14 +389,14 @@ def checkOutView(request):
                     item.delete()
                 order = Order.objects.get(id=data.id)
                 return redirect(order.get_url())
-       
-    else :   
+
+    else:   
         form = CheckOutForm()
-        couponform = CouponApplyForm()
         new_total = total
         
-    return render(request, "checkout.html", dict(cart_items=cart_items, total=total, counter=counter, form=form , couponform=couponform,
-                                                add_coupon =add_coupon ,discount_price = discount_price, new_total= new_total ))
+    return render(request, "checkout.html", dict(cart_items=cart_items, total=total, counter=counter,form=form 
+                                                 , new_total= new_total ,coupon= coupon , add_coupon= add_coupon,
+                                                 coupon_id = coupon_id ))
 
 
 
@@ -357,25 +423,54 @@ def paymentView(request,order_id):
 def orderHistory(request):
     if request.user.is_authenticated:
         username = str(request.user.username)
-        orders = Order.objects.filter(user_id=username)
+        orders = Order.objects.filter(user_id=username).order_by('-id')
     return render(request, 'order.html', {'orders':orders})
 
 
+
+
 def viewOrder(request,order_id):
+    coupon = None
     if request.user.is_authenticated:
         username = str(request.user.username)
         order = Order.objects.get(user_id=username,id=order_id)
         orderitem = OrderItem.objects.filter(order=order)
-    return render(request, 'viewOrder.html', {'order':order, 'order_item':orderitem})
+        try:
+            coupon = Coupon.objects.get(code=order.code)
+            if  coupon == None:
+                coupon = None
+               
+        except Coupon.DoesNotExist:
+            pass
+
+    return render(request, 'viewOrder.html', {'order':order, 'order_item':orderitem, 'coupon':coupon})
 
 
 
 def search(request):
+    title = request.GET.get('title')
     products = Product.objects.none()
-    products_name = Product.objects.filter(name__icontains = request.GET.get('title') , available=True)
+    products_name = Product.objects.filter(name__icontains = request.GET.get('title', None) , available=True)
     products_category = Product.objects.filter(category__name__icontains = request.GET.get('title') , available=True)
     products_brand = Product.objects.filter(brand__name__icontains = request.GET.get('title') , available=True)
     products = products.union(products_name)
     products = products.union(products_category)
     products = products.union(products_brand)
-    return render(request, 'products.html',{'products':products })
+
+
+
+    paginator = Paginator(products.order_by('id'),2)
+    try:
+        page=int(request.GET.get('page','1'))
+    except:
+        page=1
+
+    try: 
+        productperPage = paginator.page(page)
+    except (EmptyPage,InvalidPage):
+        productperPage = paginator.page(paginator.num_pages)
+
+    return render(request, 'products.html',{'products':productperPage, 'title':title})
+
+    
+    

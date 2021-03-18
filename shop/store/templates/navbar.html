@@ -22,8 +22,8 @@
           {% recursetree category_links %}
             <a class="dropdown-item " href="{{node.get_url}}">{{ node.name }}</a>
             {% if not node.is_leaf_node %}
-                <a class="dropdown-item" href="{{node.get_url}}">{{ children }}</a>
-              {% endif %}
+                {{ children }}
+            {% endif %}
             
           {% endrecursetree %}
         </div>
@@ -81,7 +81,7 @@
           <a class="nav-link text-light text-uppercase font-weight-bold px-3" href="{% url 'signIn' %}">
             เข้าสู่ระบบ <i class="fas fa-sign-in-alt"></i>
           </a>
-        </li>;
+        </li>
         {% endif %}
 
         

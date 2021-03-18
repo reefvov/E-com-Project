@@ -45,8 +45,26 @@
 </div>
 
 
+{% if add_coupon == False%}
+<h4 class="text-right">ราคาสินค้ารวม {{total|intcomma}} บาท</h4>
+<h4 class="text-right">ราคาสินค้ารวมทั้งสิ้น {{new_total|intcomma}} บาท</h4>
+{% else %}
+<h4 class="text-right">ราคาสินค้ารวม  {{total|intcomma}} บาท</h4>
+<h6 class="text-right">ส่วนลด{{coupon.code}} </h6> 
+<h4 class="text-right">ส่วนลด -{{coupon.discount|intcomma}} บาท</h4>
+<h4 class="text-right">ราคาสินค้ารวมทั้งสิ้น {{new_total|intcomma}} บาท</h4>
+{% endif %}
 
-<form class="row g-3 my-2" action="{%url 'checkOut' %}" enctype="multipart/form-data"  method="POST">
+
+
+
+
+
+
+
+
+
+<form class="row g-3 my-2" action=""   method="POST">
   {% csrf_token %}
 
   <h2>ที่อยู่จัดส่ง</h2>
@@ -81,7 +99,7 @@
     </div>
 
     <div class="col-md-3">
-      <label for="inputState" class="form-label">เขต/อำเภอ</label>ฃ
+      <label for="inputState" class="form-label">เขต/อำเภอ</label>
   
       {{form.district}}
     </div>

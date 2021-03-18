@@ -60,16 +60,45 @@
     </div>
 
     
+    {% if add_coupon == False%}
     <h4 class="text-right">ราคาสินค้ารวม {{total|intcomma}} บาท</h4>
+    <h4 class="text-right">ราคาสินค้ารวมทั้งสิ้น {{new_total|intcomma}} บาท</h4>
+    {% else %}
+    <h4 class="text-right">ราคาสินค้ารวม  {{total|intcomma}} บาท</h4>
+    <h6 class="text-right">ส่วนลด{{coupon.code}} </h6> 
+    <h6 class="text-right"><a href="{% url 'removeCoupon' %}">ลบ</a></h6>
+    <h4 class="text-right">ส่วนลด -{{coupon.discount|intcomma}} บาท</h4>
+    <h4 class="text-right">ราคาสินค้ารวมทั้งสิ้น {{new_total|intcomma}} บาท</h4>
+    {% endif %}
     
   
 
+    
+    {% if messages %}
+    <ul class="messages text-danger  ">
+        {% for message in messages %}
+        <li  {% if message.tags %} class=" {{ message.tags }} " {% endif %}> {{ message }} </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+
+
+    <form action="{%url 'cartDetail' %}", method="POST">
+        <div class="input-group">
+            {% csrf_token %}
+            {{form}}
+          <div class="input-group-append ">
+            <button class="btn btn-success" type="submit" name="redeem">ใช้</button>
+          </div>
+        </div>
+      </form>
 
 
 
 
         <!--ปุ่มยืนยันการสั่งซื้อ-->
-      <form action="{%url 'checkOut' %}" method="POST">
+      <form action="{%url 'checkOut' coupon_id%}" method="POST">
         {% csrf_token %}
         <button class="btn btn-primary " type="submit" name="confirm" >ยืนยันการสั่งซื้อ</button> 
       </form>

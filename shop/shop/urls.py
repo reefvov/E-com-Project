@@ -33,6 +33,7 @@ urlpatterns = [
     path('cartdetail/', views.cartdetail,name='cartDetail'),
     path('removeCoupon/', views.removeCoupon, name='removeCoupon'),
     path('checkout/', views.checkOutView, name='checkOut'),
+    path('checkout/<int:coupon_id>', views.checkOutView, name='checkOut'),
     path('payment/<int:order_id>', views.paymentView, name='payment'),
     path('account/create', views.signUpView, name='signUp' ),
     path('account/login', views.signInView, name='signIn' ),

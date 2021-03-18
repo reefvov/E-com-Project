@@ -21,11 +21,7 @@ class CouponApplyForm(forms.Form):
 
 
 
-CITY_CHOICES = [
-    ('bangkok', 'กรุงเทพมหานคร'),
-    ('nan', 'น่าน'),
-    ('chiangmai', 'เชียงใหม่'),
-]
+
 
 BANK_CHOICES = [
     ('kbank', 'ธ.กสิกรไทย : 747-2-07355-3'),
@@ -54,16 +50,16 @@ class CheckOutForm(forms.Form):
         'class' : 'form-control',
         'id' : 'address'
     }))          
-    city = forms.ChoiceField( label='', choices=CITY_CHOICES , widget=forms.Select(attrs={
-        'class':'form-select',
+    city = forms.CharField(widget = forms.TextInput(attrs={                   #ชื่อ
+        'class' : 'form-control',
         'id' : 'city'
     }))               
-    district = forms.ChoiceField(label='', choices=CITY_CHOICES , widget=forms.Select(attrs={
-        'class':'form-select',
+    district = forms.CharField(widget = forms.TextInput(attrs={                   #ชื่อ
+        'class' : 'form-control',
         'id' : 'district'
     }))               
-    subdistrict = forms.ChoiceField(label='', choices=CITY_CHOICES , widget=forms.Select(attrs={
-        'class':'form-select',
+    subdistrict = forms.CharField(widget = forms.TextInput(attrs={                   #ชื่อ
+        'class' : 'form-control',
         'id' : 'subdistrict'
     }))               
     postcode = forms.CharField(widget = forms.TextInput(attrs={               

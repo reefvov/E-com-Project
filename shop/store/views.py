@@ -423,8 +423,20 @@ def paymentView(request,order_id):
 def orderHistory(request):
     if request.user.is_authenticated:
         username = str(request.user.username)
-        orders = Order.objects.filter(user_id=username).order_by('-id')
-    return render(request, 'order.html', {'orders':orders})
+        orders = Order.objects.filter(user_id=username)
+
+
+    paginator = Paginator(orders.order_by('-id'),10)
+    try:
+        page=int(request.GET.get('page','1'))
+    except:
+        page=1
+
+    try: 
+        orderperPage = paginator.page(page)
+    except (EmptyPage,InvalidPage):
+        orderperPage = paginator.page(paginator.num_pages)
+    return render(request, 'order.html', {'orders':orderperPage})
 
 
 

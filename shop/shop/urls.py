@@ -40,7 +40,9 @@ urlpatterns = [
     path('account/logout', views.signOutView, name='signOut' ),
     path('search/', views.search, name='search' ),
     path('orderHistory/', views.orderHistory, name='orderHistory'),
-    path('order/<int:order_id>', views.viewOrder, name='orderDetail' )
+    path('order/<int:order_id>', views.viewOrder, name='orderDetail' ),
+    path('thankyou/', views.thankyou, name='thankyou' )
+
 ]
 
 if settings.DEBUG :

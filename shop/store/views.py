@@ -409,7 +409,7 @@ def paymentView(request,order_id):
             order.slip = form.cleaned_data['slip']
             order.status = 'ชำระเงินแล้ว-รอตรวจสอบ'
             order.save()
-        return redirect('/')
+        return redirect('thankyou')
     else :   
         form = PaymentForm()
         order = Order.objects.get(id=order_id)
@@ -486,3 +486,5 @@ def search(request):
 
     
     
+def thankyou(request):
+    return render(request, 'thankyou.html')
